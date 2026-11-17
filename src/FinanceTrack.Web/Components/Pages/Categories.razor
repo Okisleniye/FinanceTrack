@@ -1,0 +1,600 @@
+@page "/categories"
+@rendermode InteractiveServer
+@inject ICategoryService CategoryService
+
+<PageTitle>FinanceTrack — Categories</PageTitle>
+
+<div class="container-fluid p-0">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h1 class="h3 mb-1 text-gray-800">Categories</h1>
+            <p class="text-muted mb-0">Organize and manage income and expense categories.</p>
+        </div>
+        <div>
+            <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2 shadow-sm" @onclick="OpenCreateModal">
+                <i class="bi bi-plus-lg"></i>
+                <span>Add Category</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Feedback Alerts -->
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show d-flex align-items-center shadow-sm" role="alert">
+            <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+            <div>@successMessage</div>
+            <button type="button" class="btn-close" @onclick="() => successMessage = null" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center shadow-sm" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+            <div>@errorMessage</div>
+            <button type="button" class="btn-close" @onclick="() => errorMessage = null" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Type Tabs & Counts -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-2 p-md-3">
+            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+                <ul class="nav nav-pills gap-1">
+                    <li class="nav-item">
+                        <button class="nav-link @(activeTab == "All" ? "active" : "")" @onclick='() => SetTab("All")'>
+                            All <span class="badge bg-secondary ms-1">@allCategories.Count</span>
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link @(activeTab == "Expense" ? "active" : "")" @onclick='() => SetTab("Expense")'>
+                            <i class="bi bi-arrow-up-right me-1 text-danger"></i> Expenses 
+                            <span class="badge bg-danger ms-1">@allCategories.Count(c => c.Type == TransactionType.Expense)</span>
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link @(activeTab == "Income" ? "active" : "")" @onclick='() => SetTab("Income")'>
+                            <i class="bi bi-arrow-down-left me-1 text-success"></i> Income 
+                            <span class="badge bg-success ms-1">@allCategories.Count(c => c.Type == TransactionType.Income)</span>
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="text-muted small px-2">
+                    Total: <strong>@DisplayedCategories.Count()</strong> categories
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Categories Grid / Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            @if (isLoading)
+            {
+                <div class="p-5 text-center text-muted">
+                    <div class="spinner-border text-primary mb-3" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <div>Loading categories...</div>
+                </div>
+            }
+            else if (!DisplayedCategories.Any())
+            {
+                <div class="p-5 text-center text-muted">
+                    <i class="bi bi-tags display-4 text-secondary mb-3 d-block"></i>
+                    <h5 class="fw-semibold text-dark">No categories found</h5>
+                    <p class="mb-3 text-muted">No categories match the selected filter.</p>
+                    <button class="btn btn-primary btn-sm" @onclick="OpenCreateModal">
+                        <i class="bi bi-plus-lg me-1"></i> Add Category
+                    </button>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-3 py-3" style="width: 70px;">Icon</th>
+                                <th class="py-3">Category Name</th>
+                                <th class="py-3" style="width: 140px;">Type</th>
+                                <th class="py-3 text-center" style="width: 150px;">Transactions</th>
+                                <th class="py-3 text-center" style="width: 130px;">Budgets</th>
+                                <th class="pe-3 py-3 text-center" style="width: 130px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var c in DisplayedCategories)
+                            {
+                                <tr>
+                                    <td class="ps-3">
+                                        <div class="d-flex align-items-center justify-content-center rounded-circle text-white shadow-sm"
+                                             style="width: 40px; height: 40px; background-color: @c.Color;">
+                                            <i class="bi @c.Icon fs-5"></i>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold text-dark fs-6">@c.Name</div>
+                                        <div class="text-muted small">ID: @c.Id &bull; Color: <span class="badge" style="background-color: @c.Color;">@c.Color</span></div>
+                                    </td>
+                                    <td>
+                                        @if (c.Type == TransactionType.Income)
+                                        {
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                                <i class="bi bi-arrow-down-left me-1"></i>Income
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">
+                                                <i class="bi bi-arrow-up-right me-1"></i>Expense
+                                            </span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-light text-dark border px-2 py-1">
+                                            <i class="bi bi-receipt me-1"></i>@c.TransactionCount
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        @if (c.Type == TransactionType.Expense)
+                                        {
+                                            <span class="badge bg-light text-dark border px-2 py-1">
+                                                <i class="bi bi-piggy-bank me-1"></i>@c.BudgetCount
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted small">—</span>
+                                        }
+                                    </td>
+                                    <td class="pe-3 text-center">
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-secondary" 
+                                                    @onclick="() => OpenEditModal(c)" 
+                                                    title="Edit category">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger" 
+                                                    @onclick="() => OpenDeleteModal(c)" 
+                                                    title="@(c.TransactionCount > 0 || c.BudgetCount > 0 ? "Cannot delete category in use" : "Delete category")">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- ====================================================================== -->
+<!-- CREATE / EDIT MODAL                                                    -->
+<!-- ====================================================================== -->
+@if (showFormModal)
+{
+    <div class="modal fade show d-block modal-backdrop-custom" tabindex="-1" @onclick="CloseFormModal">
+        <div class="modal-dialog modal-dialog-centered" @onclick:stopPropagation="true">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi @(isEditing ? "bi-pencil-square text-primary" : "bi-plus-circle text-primary") me-2"></i>
+                        @(isEditing ? "Edit Category" : "New Category")
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="CloseFormModal" aria-label="Close"></button>
+                </div>
+
+                <EditForm Model="formModel" OnValidSubmit="HandleFormSubmit">
+                    <DataAnnotationsValidator />
+
+                    <div class="modal-body">
+                        @if (!string.IsNullOrEmpty(modalErrorMessage))
+                        {
+                            <div class="alert alert-danger py-2 px-3 small mb-3">
+                                <i class="bi bi-exclamation-circle me-1"></i> @modalErrorMessage
+                            </div>
+                        }
+
+                        <!-- Category Name -->
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-muted">Category Name *</label>
+                            <InputText @bind-Value="formModel.Name" class="form-control" placeholder="e.g. Groceries, Gym, Dividends" maxlength="50" />
+                            <ValidationMessage For="@(() => formModel.Name)" class="text-danger small mt-1" />
+                        </div>
+
+                        <!-- Category Type -->
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-muted">Category Type *</label>
+                            @if (isEditing && categoryToEdit != null && (categoryToEdit.TransactionCount > 0 || categoryToEdit.BudgetCount > 0))
+                            {
+                                <div class="alert alert-warning py-2 px-3 small mb-1">
+                                    <i class="bi bi-info-circle me-1"></i> Type cannot be changed because this category is used by existing transactions or budgets.
+                                </div>
+                                <input type="text" class="form-control bg-light" value="@formModel.Type.ToString()" readonly />
+                            }
+                            else
+                            {
+                                <div class="btn-group w-100" role="group">
+                                    <input type="radio" 
+                                           class="btn-check" 
+                                           name="catType" 
+                                           id="btnCatExpense" 
+                                           checked="@(formModel.Type == TransactionType.Expense)"
+                                           @onchange="() => formModel.Type = TransactionType.Expense" />
+                                    <label class="btn btn-outline-danger" for="btnCatExpense">
+                                        <i class="bi bi-arrow-up-right me-1"></i> Expense
+                                    </label>
+
+                                    <input type="radio" 
+                                           class="btn-check" 
+                                           name="catType" 
+                                           id="btnCatIncome" 
+                                           checked="@(formModel.Type == TransactionType.Income)"
+                                           @onchange="() => formModel.Type = TransactionType.Income" />
+                                    <label class="btn btn-outline-success" for="btnCatIncome">
+                                        <i class="bi bi-arrow-down-left me-1"></i> Income
+                                    </label>
+                                </div>
+                            }
+                            <ValidationMessage For="@(() => formModel.Type)" class="text-danger small mt-1" />
+                        </div>
+
+                        <!-- Color Selection -->
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-muted">Color *</label>
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <input type="color" class="form-control form-control-color" @bind="formModel.Color" title="Choose color" />
+                                <span class="badge px-3 py-2 text-white shadow-sm" style="background-color: @formModel.Color;">
+                                    @formModel.Color
+                                </span>
+                            </div>
+                            <!-- Preset Palette -->
+                            <div class="d-flex flex-wrap gap-1">
+                                @foreach (var color in PresetColors)
+                                {
+                                    <button type="button" 
+                                            class="btn p-0 rounded-circle border @(formModel.Color.Equals(color, StringComparison.OrdinalIgnoreCase) ? "border-dark border-3" : "")"
+                                            style="width: 24px; height: 24px; background-color: @color;"
+                                            @onclick="() => formModel.Color = color">
+                                    </button>
+                                }
+                            </div>
+                            <ValidationMessage For="@(() => formModel.Color)" class="text-danger small mt-1" />
+                        </div>
+
+                        <!-- Icon Selection -->
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-muted">Icon *</label>
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <div class="d-flex align-items-center justify-content-center rounded text-white"
+                                     style="width: 38px; height: 38px; background-color: @formModel.Color;">
+                                    <i class="bi @formModel.Icon fs-5"></i>
+                                </div>
+                                <span class="text-muted small">Selected: <code>@formModel.Icon</code></span>
+                            </div>
+                            <!-- Preset Icons Grid -->
+                            <div class="border rounded p-2 bg-light" style="max-height: 140px; overflow-y: auto;">
+                                <div class="d-flex flex-wrap gap-2">
+                                    @foreach (var icon in PresetIcons)
+                                    {
+                                        <button type="button" 
+                                                class="btn btn-sm @(formModel.Icon == icon ? "btn-primary" : "btn-outline-secondary") d-flex align-items-center justify-content-center"
+                                                style="width: 36px; height: 36px;"
+                                                @onclick="() => formModel.Icon = icon"
+                                                title="@icon">
+                                            <i class="bi @icon fs-6"></i>
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                            <ValidationMessage For="@(() => formModel.Icon)" class="text-danger small mt-1" />
+                        </div>
+                    </div>
+
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-outline-secondary" @onclick="CloseFormModal" disabled="@isSubmitting">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary d-inline-flex align-items-center gap-1" disabled="@isSubmitting">
+                            @if (isSubmitting)
+                            {
+                                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                <span>Saving...</span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-check-lg"></i>
+                                <span>@(isEditing ? "Save Changes" : "Create Category")</span>
+                            }
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- ====================================================================== -->
+<!-- DELETE CONFIRMATION MODAL                                              -->
+<!-- ====================================================================== -->
+@if (showDeleteModal && categoryToDelete != null)
+{
+    <div class="modal fade show d-block modal-backdrop-custom" tabindex="-1" @onclick="CloseFormModal">
+        <div class="modal-dialog modal-dialog-centered" @onclick:stopPropagation="true">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-danger">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i> Delete Category
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="CloseDeleteModal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body py-3">
+                    @if (cannotDeleteReason != null)
+                    {
+                        <div class="alert alert-warning mb-3">
+                            <i class="bi bi-shield-lock-fill me-2 fs-5"></i>
+                            <strong>Cannot Delete Category</strong>
+                            <p class="mb-0 mt-1 small">@cannotDeleteReason</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="mb-3">Are you sure you want to delete category <strong>@categoryToDelete.Name</strong>? This action cannot be undone.</p>
+                    }
+
+                    <div class="p-3 bg-light rounded border">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <div class="d-flex align-items-center justify-content-center rounded-circle text-white shadow-sm"
+                                 style="width: 36px; height: 36px; background-color: @categoryToDelete.Color;">
+                                <i class="bi @categoryToDelete.Icon"></i>
+                            </div>
+                            <div>
+                                <span class="fw-bold">@categoryToDelete.Name</span>
+                                <span class="badge ms-2 @(categoryToDelete.Type == TransactionType.Income ? "bg-success" : "bg-danger")">
+                                    @categoryToDelete.TypeName
+                                </span>
+                            </div>
+                        </div>
+                        <div class="text-muted small">
+                            Used by: <strong>@categoryToDelete.TransactionCount</strong> transactions &bull; <strong>@categoryToDelete.BudgetCount</strong> budgets
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary" @onclick="CloseDeleteModal" disabled="@isSubmitting">
+                        @(cannotDeleteReason != null ? "Close" : "Cancel")
+                    </button>
+                    @if (cannotDeleteReason == null)
+                    {
+                        <button type="button" class="btn btn-danger d-inline-flex align-items-center gap-1" @onclick="ConfirmDelete" disabled="@isSubmitting">
+                            @if (isSubmitting)
+                            {
+                                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                <span>Deleting...</span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-trash"></i>
+                                <span>Delete Category</span>
+                            }
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<CategoryDto> allCategories = new();
+    private string activeTab = "All";
+
+    // UI state
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+    private string? successMessage;
+    private string? errorMessage;
+    private string? modalErrorMessage;
+
+    // Modal state
+    private bool showFormModal = false;
+    private bool isEditing = false;
+    private CategoryFormModel formModel = new();
+    private CategoryDto? categoryToEdit;
+
+    private bool showDeleteModal = false;
+    private CategoryDto? categoryToDelete;
+    private string? cannotDeleteReason;
+
+    private static readonly string[] PresetColors = new[]
+    {
+        "#fd7e14", "#0dcaf0", "#6f42c1", "#0d6efd", "#d63384", "#dc3545",
+        "#20c997", "#6c757d", "#198754", "#ffc107", "#17a2b8", "#343a40"
+    };
+
+    private static readonly string[] PresetIcons = new[]
+    {
+        "bi-tag", "bi-cup-hot", "bi-car-front", "bi-bag", "bi-house-door",
+        "bi-controller", "bi-heart-pulse", "bi-mortarboard", "bi-cash-stack", "bi-laptop",
+        "bi-briefcase", "bi-graph-up-arrow", "bi-wallet2", "bi-cart", "bi-airplane",
+        "bi-film", "bi-gift", "bi-fuel-pump", "bi-shield-check", "bi-three-dots"
+    };
+
+    private IEnumerable<CategoryDto> DisplayedCategories =>
+        activeTab switch
+        {
+            "Expense" => allCategories.Where(c => c.Type == TransactionType.Expense),
+            "Income" => allCategories.Where(c => c.Type == TransactionType.Income),
+            _ => allCategories
+        };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCategoriesAsync();
+    }
+
+    private async Task LoadCategoriesAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            var categories = await CategoryService.GetAllAsync();
+            allCategories = categories.ToList();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load categories: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void SetTab(string tab)
+    {
+        activeTab = tab;
+    }
+
+    private void OpenCreateModal()
+    {
+        isEditing = false;
+        categoryToEdit = null;
+        modalErrorMessage = null;
+        formModel = new CategoryFormModel
+        {
+            Name = string.Empty,
+            Type = activeTab == "Income" ? TransactionType.Income : TransactionType.Expense,
+            Color = PresetColors[0],
+            Icon = PresetIcons[0]
+        };
+        showFormModal = true;
+    }
+
+    private void OpenEditModal(CategoryDto category)
+    {
+        isEditing = true;
+        categoryToEdit = category;
+        modalErrorMessage = null;
+        formModel = CategoryFormModel.FromDto(category);
+        showFormModal = true;
+    }
+
+    private void CloseFormModal()
+    {
+        showFormModal = false;
+        categoryToEdit = null;
+        modalErrorMessage = null;
+    }
+
+    private async Task HandleFormSubmit()
+    {
+        isSubmitting = true;
+        modalErrorMessage = null;
+
+        try
+        {
+            if (isEditing)
+            {
+                var updateDto = formModel.ToUpdateDto();
+                await CategoryService.UpdateAsync(updateDto);
+                successMessage = $"Category '{formModel.Name}' updated successfully.";
+            }
+            else
+            {
+                var createDto = formModel.ToCreateDto();
+                await CategoryService.CreateAsync(createDto);
+                successMessage = $"Category '{formModel.Name}' created successfully.";
+            }
+
+            CloseFormModal();
+            await LoadCategoriesAsync();
+        }
+        catch (ApplicationValidationException vex)
+        {
+            modalErrorMessage = vex.Message;
+        }
+        catch (NotFoundException nfe)
+        {
+            modalErrorMessage = nfe.Message;
+        }
+        catch (Exception ex)
+        {
+            modalErrorMessage = $"An error occurred while saving: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private async Task OpenDeleteModal(CategoryDto category)
+    {
+        categoryToDelete = category;
+        cannotDeleteReason = null;
+
+        var canDelete = await CategoryService.CanDeleteAsync(category.Id);
+        if (!canDelete)
+        {
+            cannotDeleteReason = $"Category '{category.Name}' is in use by {category.TransactionCount} transaction(s) and/or {category.BudgetCount} budget(s). Delete or reassign them before deleting this category.";
+        }
+
+        showDeleteModal = true;
+    }
+
+    private void CloseDeleteModal()
+    {
+        showDeleteModal = false;
+        categoryToDelete = null;
+        cannotDeleteReason = null;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (categoryToDelete == null) return;
+
+        isSubmitting = true;
+        errorMessage = null;
+
+        try
+        {
+            var success = await CategoryService.DeleteAsync(categoryToDelete.Id);
+            if (success)
+            {
+                successMessage = $"Category '{categoryToDelete.Name}' deleted successfully.";
+            }
+            else
+            {
+                errorMessage = "Failed to delete category. It may have already been removed.";
+            }
+
+            CloseDeleteModal();
+            await LoadCategoriesAsync();
+        }
+        catch (ApplicationValidationException vex)
+        {
+            errorMessage = vex.Message;
+            CloseDeleteModal();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error deleting category: {ex.Message}";
+            CloseDeleteModal();
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+}

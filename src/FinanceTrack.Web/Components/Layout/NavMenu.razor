@@ -1,0 +1,60 @@
+<div class="top-row ps-3 pe-3 navbar navbar-dark bg-dark border-bottom border-secondary border-opacity-25 py-3">
+    <div class="container-fluid p-0 d-flex justify-content-between align-items-center">
+        <a class="navbar-brand d-flex align-items-center gap-2 m-0" href="" @onclick="HandleNavigate">
+            <div class="bg-primary bg-opacity-25 text-primary p-2 rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                <i class="bi bi-wallet2 fs-5"></i>
+            </div>
+            <div>
+                <span class="fw-bold fs-5 text-white">FinanceTrack</span>
+            </div>
+        </a>
+    </div>
+</div>
+
+<div class="nav-scrollable py-2">
+    <nav class="flex-column nav nav-pills p-3 gap-2">
+        <div class="nav-item">
+            <NavLink class="nav-link d-flex align-items-center" href="" Match="NavLinkMatch.All" @onclick="HandleNavigate">
+                <i class="bi bi-speedometer2 me-2 fs-5"></i>
+                <span>Dashboard</span>
+            </NavLink>
+        </div>
+        <div class="nav-item">
+            <NavLink class="nav-link d-flex align-items-center" href="transactions" @onclick="HandleNavigate">
+                <i class="bi bi-arrow-left-right me-2 fs-5"></i>
+                <span>Transactions</span>
+            </NavLink>
+        </div>
+        <div class="nav-item">
+            <NavLink class="nav-link d-flex align-items-center" href="categories" @onclick="HandleNavigate">
+                <i class="bi bi-tags me-2 fs-5"></i>
+                <span>Categories</span>
+            </NavLink>
+        </div>
+        <div class="nav-item">
+            <NavLink class="nav-link d-flex align-items-center" href="budgets" @onclick="HandleNavigate">
+                <i class="bi bi-piggy-bank me-2 fs-5"></i>
+                <span>Budgets</span>
+            </NavLink>
+        </div>
+        <div class="nav-item">
+            <NavLink class="nav-link d-flex align-items-center" href="reports" @onclick="HandleNavigate">
+                <i class="bi bi-graph-up me-2 fs-5"></i>
+                <span>Reports & Analytics</span>
+            </NavLink>
+        </div>
+    </nav>
+</div>
+
+@code {
+    [Parameter]
+    public EventCallback OnNavigate { get; set; }
+
+    private async Task HandleNavigate()
+    {
+        if (OnNavigate.HasDelegate)
+        {
+            await OnNavigate.InvokeAsync();
+        }
+    }
+}

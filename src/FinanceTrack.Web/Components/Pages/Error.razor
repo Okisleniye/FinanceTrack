@@ -1,0 +1,27 @@
+@page "/Error"
+@using System.Diagnostics
+
+<PageTitle>Error — FinanceTrack</PageTitle>
+
+<div class="container py-5 text-center">
+    <h1 class="text-danger"><i class="bi bi-exclamation-triangle"></i> Error</h1>
+    <h2 class="text-danger">An error occurred while processing your request.</h2>
+
+    @if (ShowRequestId)
+    {
+        <p class="text-muted mt-3">
+            <strong>Request ID:</strong> <code>@RequestId</code>
+        </p>
+    }
+
+    <a href="/" class="btn btn-primary mt-3">Return to Dashboard</a>
+</div>
+
+@code {
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    private string? RequestId => Activity.Current?.Id ?? HttpContext?.TraceIdentifier;
+
+    private bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
+}

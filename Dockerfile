@@ -4,26 +4,20 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-# Copy solution and project files first to leverage Docker layer caching
-COPY FinanceTrack.sln ./
+# Copy project files for caching
 COPY src/FinanceTrack.Domain/FinanceTrack.Domain.csproj src/FinanceTrack.Domain/
 COPY src/FinanceTrack.Application/FinanceTrack.Application.csproj src/FinanceTrack.Application/
 COPY src/FinanceTrack.Infrastructure/FinanceTrack.Infrastructure.csproj src/FinanceTrack.Infrastructure/
 COPY src/FinanceTrack.Web/FinanceTrack.Web.csproj src/FinanceTrack.Web/
-COPY tests/FinanceTrack.UnitTests/FinanceTrack.UnitTests.csproj tests/FinanceTrack.UnitTests/
-COPY tests/FinanceTrack.IntegrationTests/FinanceTrack.IntegrationTests.csproj tests/FinanceTrack.IntegrationTests/
 
-# Restore dependencies
-RUN dotnet restore FinanceTrack.sln
+# Restore dependencies for Web project
+RUN dotnet restore src/FinanceTrack.Web/FinanceTrack.Web.csproj
 
-# Copy all remaining source code
-COPY . .
+# Copy application source code
+COPY src/ src/
 
-# Build solution in Release configuration
-RUN dotnet build FinanceTrack.sln -c Release --no-restore
-
-# Publish the Web project
-RUN dotnet publish src/FinanceTrack.Web/FinanceTrack.Web.csproj -c Release -o /app/publish --no-restore
+# Publish Web project in Release configuration (includes static web assets manifest)
+RUN dotnet publish src/FinanceTrack.Web/FinanceTrack.Web.csproj -c Release -o /app/publish
 
 # =============================================================================
 # Stage 2: Runtime

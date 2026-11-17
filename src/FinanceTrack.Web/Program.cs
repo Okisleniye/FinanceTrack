@@ -12,8 +12,12 @@ CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Ensure static web assets (e.g. _framework/blazor.web.js) are loaded in all environments
-builder.WebHost.UseStaticWebAssets();
+// Static web assets manifest is only available in Development (SDK environment).
+// In Production (Docker/Render), published files in wwwroot/_framework are served by UseStaticFiles().
+if (builder.Environment.IsDevelopment())
+{
+    builder.WebHost.UseStaticWebAssets();
+}
 
 // Configure forwarded headers for reverse proxy environments (e.g. Render, Docker, Cloud)
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
@@ -57,7 +61,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+// HTTPS redirection is handled by Render's reverse proxy; skip inside the container.
 app.UseStaticFiles();
 app.UseAntiforgery();
 

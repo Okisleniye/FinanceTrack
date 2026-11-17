@@ -1,5 +1,11 @@
 # FinanceTrack — Personal Finance Management
 
+[![Live Demo](https://img.shields.io/badge/Demo-Live%20on%20Render-brightgreen?style=for-the-badge&logo=render)](https://financetrack-vhve.onrender.com)
+[![.NET 10](https://img.shields.io/badge/.NET-10.0-purple?style=for-the-badge&logo=dotnet)](https://dotnet.microsoft.com/)
+[![Blazor Server](https://img.shields.io/badge/Blazor-Interactive%20Server-512BD4?style=for-the-badge&logo=blazor)](https://financetrack-vhve.onrender.com)
+
+> 🚀 **Live Demo:** [https://financetrack-vhve.onrender.com](https://financetrack-vhve.onrender.com)
+
 FinanceTrack is a modern personal finance management web application designed and built with **C#**, **.NET 10**, **ASP.NET Core Blazor Web App (Interactive Server)**, **Entity Framework Core**, **SQLite**, and **Bootstrap 5**.
 
 The application helps users record transactions, categorize income and expenses, set and monitor monthly budgets with visual spending meters, and analyze financial health through dynamic dashboards and reports.
@@ -110,6 +116,9 @@ Open the reported URL in your web browser to access the FinanceTrack Dashboard.
 ---
 
 ## 🐳 Docker and Cloud Deployment (Render)
+
+The application is deployed live in the cloud via Docker on Render:
+- 🌐 **Live Website URL**: **[https://financetrack-vhve.onrender.com](https://financetrack-vhve.onrender.com)**
 
 The project includes a multi-stage **Dockerfile** and **render.yaml** optimized for deploying to [Render](https://render.com) or any container platform:
 

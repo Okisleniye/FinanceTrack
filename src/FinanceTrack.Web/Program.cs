@@ -61,7 +61,9 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-// HTTPS redirection is handled by Render's reverse proxy; skip inside the container.
+// In .NET 9+, MapStaticAssets maps the static assets manifest including _framework/blazor.web.js.
+// UseStaticFiles serves any disk files in wwwroot.
+app.MapStaticAssets();
 app.UseStaticFiles();
 app.UseAntiforgery();
 
